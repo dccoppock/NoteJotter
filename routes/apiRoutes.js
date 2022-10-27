@@ -1,8 +1,7 @@
 const router = require('express').Router();
-const fs = require('fs');
 const storage = require('../db/storage');
 
-// `GET /api/notes` should read the `db.json` file and return all saved notes as JSON.
+// GET /api/notes - respond with all notes in database
 router.get('/notes', (req, res) => {
     storage
         .getAllNotes()
@@ -10,15 +9,20 @@ router.get('/notes', (req, res) => {
         .catch((err) => res.status(500).json(err));
 });
 
-// `POST /api/notes` should receive a new note to save on the request body,
-// add it to the `db.json` file, and then return the new note to the client.
-// You'll need to find a way to give each note a unique id when it's saved
-// (look into npm packages that could do this for you).
+// POST /notes - add new note to database and respond with the new note (with added uuid)
 router.post('/notes', (req, res) => {
-    
+    storage
+        .storeNote(req.body)
+        .then((newNote) => res.json(newNote))
+        .catch((err) => res.status(500).json(err));
 })
 
-// `DELETE /api/notes/:id` should receive a query parameter that contains the
-// id of a note to delete. To delete a note, you'll need to read all notes
-// from the `db.json` file, remove the note with the given `id` property, and
-// then rewrite the notes to the `db.json` file.
+// DELETE /api/notes/:id - remove note with id matching ':id'
+router.delete('/notes/:id', (req, res) => {
+    storage
+        .deleteNote(req.params.id)
+        .then(() => res.json( { success: `Note ${req.params.id} removed.` } ))
+        .catch((err) => res.status(500).json(err));
+});
+
+module.exports = router;
