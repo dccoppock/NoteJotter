@@ -1,10 +1,13 @@
 const router = require('express').Router();
 const fs = require('fs');
+const storage = require('../db/storage');
 
 // `GET /api/notes` should read the `db.json` file and return all saved notes as JSON.
 router.get('/notes', (req, res) => {
-    readFromFile('./db/db.json')
-    .then((data) => res.json(JSON.parse(data)));
+    storage
+        .getAllNotes()
+        .then((allNotes) => { return res.json(allNotes); })
+        .catch((err) => res.status(500).json(err));
 });
 
 // `POST /api/notes` should receive a new note to save on the request body,
