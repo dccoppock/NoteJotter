@@ -1,10 +1,12 @@
 const util = require('util');
 const fs = require('fs');
 
-const uuid = require('uuid/v4');
+const { v1: uuidv1 } = require('uuid');
 
 const readStorage = util.promisify(fs.readFile);
 const writeStorage = util.promisify(fs.writeFile);
+
+
 
 class Storage {
     read() {
@@ -22,22 +24,23 @@ class Storage {
     }
 
     write(note) {
-        return writeStorage('db/db.json', JSON.stringify(jot));
-    }
-
-    addNoteId(title, text) {
-        const newId = uuid();
-        return { title, text, id: newId };
+        return writeStorage('db/db.json', JSON.stringify(note));
     }
 
     storeNote(note) {
+        // Function to add unique id to note object
+        function addNoteId(title, text) {
+            const newId = uuidv1();
+            return { title, text, id: newId };
+        }
         const { title, text } = note;
         if(title && text) {
             const newNote = addNoteId(title,text);
             return this.getAllNotes()
-                .then((allNotes) => allNotes.push(newNote))
-                .then((allNotes) => this.write(allNotes))
-                .then(() => newNote);
+                .then((allNotes) => allNotes.concat(newNote))
+                .then((note) => this.write( note ))
+                .then(() => newNote)
+                .catch((err) => ({failure: err}));
         } else {
             return { status: 'ERROR: title and text cannot be blank' };
         }
@@ -51,8 +54,8 @@ class Storage {
         // Get all notes, remove note(s) with id===targetId, store new ntoes list, return new notes list
         return this.getAllNotes()
             .then((allNotes) => allNotes.filter(idsMatch))
-            .then((survivingNotes) => this.write(survivingNotes))
-            .then((survivingNotes) => survivingNotes;
+            .then((note) => this.write(note))
+            .then((survivingNotes) => survivingNotes);
     }
 }
 
